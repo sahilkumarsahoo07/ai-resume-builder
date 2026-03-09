@@ -11,6 +11,10 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
 
   # Frontend: Vite (Static Site)
   - type: static
@@ -20,5 +24,5 @@ services:
     buildCommand: npm install && npm run build
     staticPublishDir: dist
     envVars:
-      - key: VITE_API_URL
+      - key: VITE_API_BASE_URL
         value: https://ai-resume-builder-server.onrender.com/api
