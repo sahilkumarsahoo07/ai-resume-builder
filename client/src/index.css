@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Drag and Drop styles */
+.drag-overlay {
+  @apply opacity-80 shadow-2xl ring-2 ring-primary-500 rounded-lg;
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset layout for print */
+  .no-print {
+    display: none !important;
+  }
+
+  #editor-container {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* Target the preview container specifically */
+  #resume-preview-container {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+
+  /* Force background colors to show up in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* html2canvas oklch compatibility fix */
+[data-printing="true"],
+[data-printing="true"] * {
+  /* Force fallback to non-oklch colors for common utilities */
+  --tw-bg-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
+  --tw-border-opacity: 1 !important;
+}
+
+/* Ensure specific backgrounds and colors that might use oklch are safe */
+[data-printing="true"] .bg-primary-50 {
+  background-color: #eff6ff !important;
+}
+
+[data-printing="true"] .bg-primary-100 {
+  background-color: #dbeafe !important;
+}
+
+[data-printing="true"] .bg-primary-500 {
+  background-color: #3b82f6 !important;
+}
+
+[data-printing="true"] .bg-primary-600 {
+  background-color: #2563eb !important;
+}
+
+[data-printing="true"] .bg-primary-700 {
+  background-color: #1d4ed8 !important;
+}
+
+[data-printing="true"] .text-primary-600 {
+  color: #2563eb !important;
+}
+
+[data-printing="true"] .text-primary-700 {
+  color: #1d4ed8 !important;
+}
+
+[data-printing="true"] .text-gray-900 {
+  color: #111827 !important;
+}
+
+[data-printing="true"] .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+[data-printing="true"] .text-gray-700 {
+  color: #374151 !important;
+}
+
+[data-printing="true"] .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+[data-printing="true"] .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+[data-printing="true"] .border-primary-200 {
+  border-color: #bfdbfe !important;
+}
+
+[data-printing="true"] .border-gray-100 {
+  border-color: #f3f4f6 !important;
+}
+
+[data-printing="true"] .border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+
+[data-printing="true"] .border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+[data-printing="true"] .border-gray-900 {
+  border-color: #111827 !important;
+}
+
+/* Force neutral surfaces to white/gray */
+[data-printing="true"] .bg-white {
+  background-color: #ffffff !important;
+}
+
+[data-printing="true"] .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
