@@ -8,12 +8,12 @@ const ModernTemplate = ({ data }) => {
             <header className="border-b-2 border-primary-600 pb-4 mb-6">
                 <h1 className="text-4xl font-bold tracking-tight text-gray-900">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-wrap gap-x-4 mt-2 text-sm text-gray-600 font-medium">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span>• Phone: {personalInfo.phone}</span>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-primary-600 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span>• Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-primary-600 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>• {personalInfo.location}</span>}
-                    {personalInfo?.links?.map((link, idx) => (
+                    {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
                         <React.Fragment key={idx}>
-                            {link.url && <span>• <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">{link.label || 'Link'}</a></span>}
+                            <span>• <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">{link.label}</a></span>
                         </React.Fragment>
                     ))}
                     {/* Fallback for legacy fields */}

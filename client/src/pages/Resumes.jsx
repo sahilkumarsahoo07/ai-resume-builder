@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useResumeStore from '../store/useResumeStore';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiFileText, FiClock, FiLayout, FiFilter, FiSearch } from 'react-icons/fi';
+import DeleteModal from '../components/common/DeleteModal';
 
 const Resumes = () => {
     const { resumesList, fetchResumes, createResume, deleteResume, isLoading } = useResumeStore();
     const navigate = useNavigate();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [resumeToDelete, setResumeToDelete] = useState(null);
 
     useEffect(() => {
         console.log('[Resumes] Component mounted, fetching resumes...');
@@ -24,10 +27,17 @@ const Resumes = () => {
         }
     };
 
-    const handleDelete = async (e, id) => {
+    const handleDeleteClick = (e, id) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this resume?')) {
-            await deleteResume(id);
+        setResumeToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (resumeToDelete) {
+            await deleteResume(resumeToDelete);
+            setIsDeleteModalOpen(false);
+            setResumeToDelete(null);
         }
     };
 
@@ -125,7 +135,7 @@ const Resumes = () => {
                                         <FiClock /> {resume.updatedAt ? new Date(resume.updatedAt).toLocaleDateString() : 'Recently'}
                                     </div>
                                     <button
-                                        onClick={(e) => resume._id && handleDelete(e, resume._id)}
+                                        onClick={(e) => resume._id && handleDeleteClick(e, resume._id)}
                                         className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-colors"
                                         title="Delete resume"
                                     >
@@ -137,6 +147,15 @@ const Resumes = () => {
                     ))}
                 </div>
             )}
+
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                isLoading={isLoading}
+                title="Delete Resume?"
+                message="Are you sure you want to delete this resume? This action cannot be undone and you will lose all saved progress."
+            />
         </div>
     );
 };

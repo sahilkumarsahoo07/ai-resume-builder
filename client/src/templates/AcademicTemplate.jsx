@@ -10,9 +10,15 @@ const AcademicTemplate = ({ data }) => {
                 <h1 className="text-3xl font-normal tracking-wide mb-2 uppercase">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-x-6 gap-y-1 text-[11pt]">
                     {personalInfo?.location && <span>{personalInfo.location}</span>}
-                    {personalInfo?.phone && <span>{personalInfo.phone}</span>}
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.linkedin && <span>{personalInfo.linkedin}</span>}
+                    {personalInfo?.phone && <span><a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:underline">{personalInfo.phone}</a></span>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:underline">{personalInfo.email}</a></span>}
+                    {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
+                        <React.Fragment key={idx}>
+                            <span><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:underline">{link.label}</a></span>
+                        </React.Fragment>
+                    ))}
+                    {/* Fallback for legacy fields */}
+                    {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('linkedin')) && personalInfo?.linkedin && <span><a href={personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:underline">LinkedIn</a></span>}
                 </div>
             </header>
 

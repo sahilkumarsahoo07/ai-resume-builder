@@ -8,14 +8,14 @@ const MinimalTemplate = ({ data }) => {
             <header className="text-center mb-8">
                 <h1 className="text-3xl tracking-widest uppercase mb-3">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-widest text-gray-500">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span>| Phone: {personalInfo.phone}</span>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-gray-900 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span>| Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-gray-900 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>| {personalInfo.location}</span>}
                 </div>
                 <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-widest text-gray-500 mt-1">
-                    {personalInfo?.links?.map((link, idx) => (
+                    {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
                         <React.Fragment key={idx}>
-                            <span>{idx === 0 ? '' : '| '} <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">{link.label || 'Link'}</a></span>
+                            <span>{idx === 0 ? '' : '| '} <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">{link.label}</a></span>
                         </React.Fragment>
                     ))}
                     {/* Fallback for legacy fields */}

@@ -9,7 +9,7 @@ const ClassicTemplate = ({ data }) => {
                 <h1 className="text-[20pt] font-bold uppercase mb-2">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="text-[10pt] flex justify-center flex-wrap gap-x-2">
                     {personalInfo?.location && <span>{personalInfo.location} |</span>}
-                    {personalInfo?.phone && <span>Phone: {personalInfo.phone} |</span>}
+                    {personalInfo?.phone && <span>Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="text-blue-800 underline">{personalInfo.phone}</a> |</span>}
                     {personalInfo?.email && <a href={`mailto:${personalInfo.email}`} className="text-blue-800 underline">{personalInfo.email}</a>}
                     {personalInfo?.links?.map((link, idx) => (
                         <React.Fragment key={idx}>

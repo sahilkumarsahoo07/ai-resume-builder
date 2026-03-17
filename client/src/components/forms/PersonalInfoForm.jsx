@@ -7,7 +7,7 @@ const PersonalInfoForm = () => {
     const { currentResume, updateResumeData } = useResumeStore();
     const personalInfo = currentResume?.personalInfo || {};
 
-    const { register, watch, setValue, control } = useForm({
+    const { register, watch, setValue, control, getValues } = useForm({
         defaultValues: {
             name: personalInfo.name || '',
             email: personalInfo.email || '',
@@ -24,13 +24,18 @@ const PersonalInfoForm = () => {
         name: 'links'
     });
 
-    // Subscribe to form changes and update store
-    useEffect(() => {
-        const subscription = watch((value) => {
-            updateResumeData('personalInfo', value);
-        });
-        return () => subscription.unsubscribe();
-    }, [watch, updateResumeData]);
+    // Helper to update store on blur
+    const handleBlur = () => {
+        const values = getValues();
+        updateResumeData('personalInfo', values);
+    };
+
+    // Handle link removal with immediate store update
+    const handleRemoveLink = (index) => {
+        remove(index);
+        // Important: use timeout or getValues after remove to ensure state is updated
+        setTimeout(handleBlur, 0);
+    };
 
     // Sync form with store if changed from outside
     useEffect(() => {
@@ -52,7 +57,7 @@ const PersonalInfoForm = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                     <input
-                        {...register('name')}
+                        {...register('name', { onBlur: handleBlur })}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow outline-none"
                         placeholder="John Doe"
                     />
@@ -61,7 +66,7 @@ const PersonalInfoForm = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                     <input
-                        {...register('email')}
+                        {...register('email', { onBlur: handleBlur })}
                         type="email"
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow outline-none"
                         placeholder="john@example.com"
@@ -71,7 +76,7 @@ const PersonalInfoForm = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                     <input
-                        {...register('phone')}
+                        {...register('phone', { onBlur: handleBlur })}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow outline-none"
                         placeholder="+1 (555) 000-0000"
                     />
@@ -80,7 +85,7 @@ const PersonalInfoForm = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                     <input
-                        {...register('location')}
+                        {...register('location', { onBlur: handleBlur })}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow outline-none"
                         placeholder="San Francisco, CA"
                     />
@@ -109,7 +114,7 @@ const PersonalInfoForm = () => {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Label</label>
                                     <input
-                                        {...register(`links.${index}.label`)}
+                                        {...register(`links.${index}.label`, { onBlur: handleBlur })}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                                         placeholder="LinkedIn, GitHub, etc."
                                     />
@@ -117,7 +122,7 @@ const PersonalInfoForm = () => {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">URL</label>
                                     <input
-                                        {...register(`links.${index}.url`)}
+                                        {...register(`links.${index}.url`, { onBlur: handleBlur })}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                                         placeholder="linkedin.com/in/username"
                                     />
@@ -125,7 +130,7 @@ const PersonalInfoForm = () => {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => remove(index)}
+                                onClick={() => handleRemoveLink(index)}
                                 className="mt-6 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                 title="Remove Link"
                             >

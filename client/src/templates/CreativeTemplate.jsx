@@ -20,11 +20,17 @@ const CreativeTemplate = ({ data }) => {
                     <section>
                         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-1">Contact</h2>
                         <div className="text-sm text-gray-300 space-y-2 break-all">
-                            {personalInfo?.email && <div>{personalInfo.email}</div>}
-                            {personalInfo?.phone && <div>{personalInfo.phone}</div>}
+                            {personalInfo?.email && <div><a href={`mailto:${personalInfo.email}`} className="hover:text-teal-400 transition-colors">{personalInfo.email}</a></div>}
+                            {personalInfo?.phone && <div><a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-teal-400 transition-colors">{personalInfo.phone}</a></div>}
                             {personalInfo?.location && <div>{personalInfo.location}</div>}
-                            {personalInfo?.linkedin && <div>{personalInfo.linkedin}</div>}
-                            {personalInfo?.portfolio && <div>{personalInfo.portfolio}</div>}
+                            {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
+                                <div key={idx}>
+                                    <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">{link.label}</a>
+                                </div>
+                            ))}
+                            {/* Fallback for legacy fields */}
+                            {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('linkedin')) && personalInfo?.linkedin && <div><a href={personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">LinkedIn</a></div>}
+                            {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('portfolio')) && personalInfo?.portfolio && <div><a href={personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : `https://${personalInfo.portfolio}`} target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Portfolio</a></div>}
                         </div>
                     </section>
 

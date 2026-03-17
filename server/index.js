@@ -31,7 +31,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const connectDB = async () => {
     try {
         const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-resume-builder';
-        mongoose.set('bufferCommands', false); // Disable buffering so we catch errors immediately
+        mongoose.set('bufferCommands', true); // Enable buffering so commands wait for connection
         await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 2000 });
         console.log('MongoDB connected successfully');
     } catch (err) {

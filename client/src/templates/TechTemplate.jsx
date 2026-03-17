@@ -9,11 +9,17 @@ const TechTemplate = ({ data }) => {
             <header className="mb-6 pb-4 border-b-2 border-gray-800">
                 <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-2">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span>| {personalInfo.phone}</span>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-gray-900 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span>| <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-gray-900 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>| {personalInfo.location}</span>}
-                    {personalInfo?.linkedin && <span>| {personalInfo.linkedin}</span>}
-                    {personalInfo?.portfolio && <span>| {personalInfo.portfolio}</span>}
+                    {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
+                        <React.Fragment key={idx}>
+                            <span>| <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors font-medium">{link.label}</a></span>
+                        </React.Fragment>
+                    ))}
+                    {/* Fallback for legacy fields */}
+                    {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('linkedin')) && personalInfo?.linkedin && <span>| <a href={personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">LinkedIn</a></span>}
+                    {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('portfolio')) && personalInfo?.portfolio && <span>| <a href={personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : `https://${personalInfo.portfolio}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">Portfolio</a></span>}
                 </div>
             </header>
 

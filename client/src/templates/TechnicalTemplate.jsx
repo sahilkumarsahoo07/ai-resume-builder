@@ -12,7 +12,7 @@ const TechnicalTemplate = ({ data }) => {
                 </div>
                 <div className="mt-4 md:mt-0 text-xs font-mono text-[#666] flex flex-col items-start md:items-end space-y-1">
                     {personalInfo?.email && <a href={`mailto:${personalInfo.email}`} className="hover:text-[#2563eb]">{personalInfo.email}</a>}
-                    {personalInfo?.phone && <span>Phone: {personalInfo.phone}</span>}
+                    {personalInfo?.phone && <span>Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-[#2563eb]">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>{personalInfo.location}</span>}
                     {personalInfo?.links?.map((link, idx) => (
                         <React.Fragment key={idx}>

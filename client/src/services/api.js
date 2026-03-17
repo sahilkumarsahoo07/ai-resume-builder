@@ -6,13 +6,8 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
-        // Try to get token from localStorage, fallback to dev token if we are in that mode
-        let token = localStorage.getItem('token');
-
-        // Manual override for dev bypass if no real token exists
-        if (!token) {
-            token = 'mock-token-for-dev';
-        }
+        // Try to get token from localStorage
+        const token = localStorage.getItem('token');
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;

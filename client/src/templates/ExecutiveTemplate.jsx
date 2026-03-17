@@ -9,8 +9,8 @@ const ExecutiveTemplate = ({ data }) => {
             <header className="border-b-4 border-gray-900 pb-5 mb-8 text-center">
                 <h1 className="text-5xl font-black uppercase tracking-widest text-gray-900 mb-3">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-sm text-gray-700 font-medium tracking-wide">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span>| Phone: {personalInfo.phone}</span>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-gray-900 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span>| Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-gray-900 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>| {personalInfo.location}</span>}
                     {personalInfo?.links?.map((link, idx) => (
                         <React.Fragment key={idx}>

@@ -7,11 +7,17 @@ const ProfessionalTemplate = ({ data }) => {
         <div className="font-serif text-gray-800 p-10 bg-white min-h-[11in] w-full">
             <header className="border-b-4 border-gray-800 pb-5 mb-6 text-center">
                 <h1 className="text-4xl font-serif font-bold text-gray-900 mb-2">{personalInfo?.name || 'Your Name'}</h1>
-                <div className="text-sm text-gray-700 flex flex-wrap justify-center gap-2">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span>• {personalInfo.phone}</span>}
+                <div className="text-sm text-gray-700 flex flex-wrap justify-center gap-x-3 gap-y-1">
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-primary-600 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span>• <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-primary-600 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span>• {personalInfo.location}</span>}
-                    {personalInfo?.linkedin && <span>• {personalInfo.linkedin}</span>}
+                    {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
+                        <React.Fragment key={idx}>
+                            <span>• <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">{link.label}</a></span>
+                        </React.Fragment>
+                    ))}
+                    {/* Fallback for legacy fields */}
+                    {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('linkedin')) && personalInfo?.linkedin && <span>• <a href={personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`} target="_blank" rel="noopener noreferrer">LinkedIn</a></span>}
                 </div>
             </header>
 

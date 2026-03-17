@@ -9,8 +9,8 @@ const CleanTemplate = ({ data }) => {
             <header className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
-                    {personalInfo?.email && <span className="flex items-center gap-1.5">{personalInfo.email}</span>}
-                    {personalInfo?.phone && <span className="flex items-center gap-1.5">Phone: {personalInfo.phone}</span>}
+                    {personalInfo?.email && <span className="flex items-center gap-1.5"><a href={`mailto:${personalInfo.email}`} className="hover:text-gray-900 transition-colors">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <span className="flex items-center gap-1.5">Phone: <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-gray-900 transition-colors">{personalInfo.phone}</a></span>}
                     {personalInfo?.location && <span className="flex items-center gap-1.5">{personalInfo.location}</span>}
                     {personalInfo?.links?.map((link, idx) => (
                         <React.Fragment key={idx}>

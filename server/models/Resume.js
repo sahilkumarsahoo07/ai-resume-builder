@@ -10,7 +10,11 @@ const ResumeSchema = new mongoose.Schema({
         phone: { type: String, default: '' },
         location: { type: String, default: '' },
         linkedin: { type: String, default: '' },
-        portfolio: { type: String, default: '' }
+        portfolio: { type: String, default: '' },
+        links: [{
+            label: { type: String, default: '' },
+            url: { type: String, default: '' }
+        }]
     },
     summary: { type: String, default: '' },
     experience: [{

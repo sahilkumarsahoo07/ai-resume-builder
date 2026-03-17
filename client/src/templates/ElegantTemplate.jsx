@@ -9,14 +9,27 @@ const ElegantTemplate = ({ data }) => {
             <header className="mb-10 text-center">
                 <h1 className="text-5xl font-light tracking-[0.2em] text-gray-900 mb-4">{personalInfo?.name || 'Your Name'}</h1>
                 <div className="flex justify-center items-center gap-4 text-xs tracking-widest text-gray-500 uppercase">
-                    {personalInfo?.email && <span>{personalInfo.email}</span>}
-                    {personalInfo?.phone && <><span className="w-1 h-1 bg-gray-300 rounded-full"></span><span>{personalInfo.phone}</span></>}
+                    {personalInfo?.email && <span><a href={`mailto:${personalInfo.email}`} className="hover:text-gray-900 transition-colors underline decoration-gray-300 underline-offset-4">{personalInfo.email}</a></span>}
+                    {personalInfo?.phone && <><span className="w-1 h-1 bg-gray-300 rounded-full"></span><span><a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="hover:text-gray-900 transition-colors">{personalInfo.phone}</a></span></>}
                     {personalInfo?.location && <><span className="w-1 h-1 bg-gray-300 rounded-full"></span><span>{personalInfo.location}</span></>}
                 </div>
-                {(personalInfo?.linkedin || personalInfo?.portfolio) && (
-                    <div className="flex justify-center items-center gap-4 text-xs tracking-widest text-gray-500 uppercase mt-2">
-                        {personalInfo?.linkedin && <span>{personalInfo.linkedin}</span>}
-                        {personalInfo?.portfolio && <><span className="w-1 h-1 bg-gray-300 rounded-full"></span><span>{personalInfo.portfolio}</span></>}
+                {(personalInfo?.linkedin || personalInfo?.portfolio || personalInfo?.links?.length > 0) && (
+                    <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-xs tracking-widest text-gray-500 uppercase mt-2">
+                        {/* Fallback for legacy fields */}
+                        {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('linkedin')) && personalInfo?.linkedin && <span><a href={personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">LinkedIn</a></span>}
+                        {!personalInfo?.links?.some(l => l.label?.toLowerCase().includes('portfolio')) && personalInfo?.portfolio && (
+                            <>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span><a href={personalInfo.portfolio.startsWith('http') ? personalInfo.portfolio : `https://${personalInfo.portfolio}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors">Portfolio</a></span>
+                            </>
+                        )}
+                        
+                        {personalInfo?.links?.filter(link => link.url && link.label).map((link, idx) => (
+                            <React.Fragment key={idx}>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors font-semibold">{link.label}</a></span>
+                            </React.Fragment>
+                        ))}
                     </div>
                 )}
             </header>

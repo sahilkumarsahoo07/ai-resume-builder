@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useResumeStore from '../store/useResumeStore';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiFileText, FiClock, FiLayout } from 'react-icons/fi';
+import DeleteModal from '../components/common/DeleteModal';
 
 const Dashboard = () => {
     const { resumesList, fetchResumes, createResume, deleteResume, isLoading } = useResumeStore();
     const navigate = useNavigate();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [resumeToDelete, setResumeToDelete] = useState(null);
 
     useEffect(() => {
         console.log('[Dashboard] Fetching resumes...');
@@ -27,10 +30,17 @@ const Dashboard = () => {
         }
     };
 
-    const handleDelete = async (e, id) => {
+    const handleDeleteClick = (e, id) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this resume?')) {
-            await deleteResume(id);
+        setResumeToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (resumeToDelete) {
+            await deleteResume(resumeToDelete);
+            setIsDeleteModalOpen(false);
+            setResumeToDelete(null);
         }
     };
 
@@ -116,10 +126,10 @@ const Dashboard = () => {
 
                                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
                                     <div className="text-xs text-gray-400 flex items-center gap-1">
-                                        <FiClock /> {new Date(resume.updatedAt).toLocaleDateString()}
+                                        <FiClock /> {resume.updatedAt ? new Date(resume.updatedAt).toLocaleDateString() : 'Recently'}
                                     </div>
                                     <button
-                                        onClick={(e) => handleDelete(e, resume._id)}
+                                        onClick={(e) => resume._id && handleDeleteClick(e, resume._id)}
                                         className="text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-colors"
                                         title="Delete resume"
                                     >
@@ -131,6 +141,15 @@ const Dashboard = () => {
                     ))}
                 </div>
             )}
+
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                isLoading={isLoading}
+                title="Delete Resume?"
+                message="Are you sure you want to delete this resume? This action cannot be undone and you will lose all saved progress."
+            />
         </div>
     );
 };

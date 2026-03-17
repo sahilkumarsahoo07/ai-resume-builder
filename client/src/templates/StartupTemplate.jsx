@@ -19,7 +19,7 @@ const StartupTemplate = ({ data }) => {
                 <div className="flex flex-wrap gap-4 text-sm font-semibold text-slate-500 relative z-10">
                     <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                         {personalInfo?.email && <a href={`mailto:${personalInfo.email}`} className="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 px-3 py-1.5 rounded-lg transition-colors">{personalInfo.email}</a>}
-                        {personalInfo?.phone && <span className="bg-slate-100 px-3 py-1.5 rounded-lg">Phone: {personalInfo.phone}</span>}
+                        {personalInfo?.phone && <a href={`tel:${personalInfo.phone.replace(/\s+/g, '')}`} className="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 px-3 py-1.5 rounded-lg transition-colors">Phone: {personalInfo.phone}</a>}
                         {personalInfo?.location && <span className="bg-slate-100 px-3 py-1.5 rounded-lg">{personalInfo.location}</span>}
                     </div>
                     <div className="flex flex-wrap gap-4 text-sm text-slate-500">
