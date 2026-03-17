@@ -23,7 +23,7 @@ const gmailTransporter = nodemailer.createTransport({
 
 /**
  * Send email using appropriate service based on environment
- * - If MAILJET_API_KEY + MAILJET_SECRET_KEY are set + production: Uses Mailjet API
+ * - If MAILJET_API_KEY + MAILJET_SECRET_KEY are set: Uses Mailjet API
  * - Otherwise: Uses Gmail SMTP (fallback)
  * 
  * @param {Object} options - Email options
@@ -34,16 +34,14 @@ const gmailTransporter = nodemailer.createTransport({
  * @returns {Promise} - Email send result
  */
 const sendEmail = async ({ email: to, subject, html, message }) => {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const hasMailjetKeys = !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
-
-    // Use Mailjet only if in production AND API keys are available
-    const useMailjet = isProduction && hasMailjetKeys;
+    // Check if real keys are provided (not placeholders from .env.example)
+    const isPlaceholder = (val) => !val || val.includes('your_');
+    const hasMailjetKeys = !isPlaceholder(process.env.MAILJET_API_KEY) && !isPlaceholder(process.env.MAILJET_SECRET_KEY);
 
     try {
-        if (useMailjet && mailjetClient) {
-            // Use Mailjet API in production
-            console.log('📧 Sending email via Mailjet API (Production)');
+        if (hasMailjetKeys && mailjetClient) {
+            // Use Mailjet API if keys are configured
+            console.log('📧 Sending email via Mailjet API...');
 
             const result = await mailjetClient
                 .post('send', { version: 'v3.1' })
@@ -51,12 +49,12 @@ const sendEmail = async ({ email: to, subject, html, message }) => {
                     Messages: [
                         {
                             From: {
-                                Email: process.env.MAILJET_FROM_EMAIL || 'no-reply@ai-resume-builder.com',
+                                Email: (process.env.MAILJET_FROM_EMAIL || 'simbaolala3@gmail.com').trim(),
                                 Name: 'AI Resume Builder'
                             },
                             To: [
                                 {
-                                    Email: to
+                                    Email: to.trim()
                                 }
                             ],
                             Subject: subject,
@@ -66,11 +64,11 @@ const sendEmail = async ({ email: to, subject, html, message }) => {
                     ]
                 });
 
-            console.log('✅ Email sent successfully via Mailjet:', result.body);
+            console.log('✅ Email sent successfully via Mailjet:', result.status);
             return { success: true, data: result.body };
         } else {
-            // Use Gmail SMTP in development or as fallback
-            console.log(`📧 Sending email via Gmail SMTP (${isProduction ? 'Fallback' : 'Development'})`);
+            // Use Gmail SMTP as fallback
+            console.log('📧 Sending email via Gmail SMTP (Fallback)');
             const info = await gmailTransporter.sendMail({
                 from: `"AI Resume Builder" <${process.env.EMAIL_USER}>`,
                 to: to,
@@ -85,11 +83,17 @@ const sendEmail = async ({ email: to, subject, html, message }) => {
     } catch (error) {
         // Detailed error logging specifically for Mailjet
         if (error.response && error.response.body) {
-            console.error(`❌ Mailjet API Error:`, JSON.stringify(error.response.body, null, 2));
+            const mailjetBody = error.response.body;
+            let friendlyError = error.message;
+            if (mailjetBody.Messages && mailjetBody.Messages[0] && mailjetBody.Messages[0].Errors) {
+                friendlyError = mailjetBody.Messages[0].Errors[0].ErrorMessage;
+            }
+            console.error(`❌ Mailjet API Error details:`, JSON.stringify(mailjetBody, null, 2));
+            throw new Error(`Email delivery failed (Mailjet): ${friendlyError}`);
         } else {
-            console.error(`❌ Error sending email via ${useMailjet ? 'Mailjet' : 'Gmail'}:`, error.message);
+            console.error(`❌ Error sending email via ${hasMailjetKeys ? 'Mailjet' : 'Gmail'}:`, error.message);
+            throw new Error(`Email delivery failed: ${error.message}`);
         }
-        throw new Error(`Email delivery failed: ${error.message}`);
     }
 };
 
