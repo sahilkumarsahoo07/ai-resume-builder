@@ -27,6 +27,7 @@ const generateOTP = () => {
 export const sendRegisterOTP = async (req, res) => {
     try {
         const { email } = req.body;
+        console.log(`[OTP] Request for: ${email}`);
 
         // Check if user already exists
         const userExists = await User.findOne({ email });
@@ -35,6 +36,7 @@ export const sendRegisterOTP = async (req, res) => {
         }
 
         const otp = generateOTP();
+        console.log(`[OTP] Generated code for: ${email}`);
         
         // Save OTP to temporary collection (upsert if exists)
         await OTP.findOneAndUpdate(
@@ -42,6 +44,7 @@ export const sendRegisterOTP = async (req, res) => {
             { otp },
             { upsert: true, new: true }
         );
+        console.log(`[OTP] Stored in DB for: ${email}`);
 
         // Send Email
         try {
@@ -51,14 +54,16 @@ export const sendRegisterOTP = async (req, res) => {
                 message: `Your verification code is: ${otp}. It expires in 10 minutes.`,
                 html: getOTPTemplate(otp, 'verification')
             });
+            console.log(`[OTP] Email sent to: ${email}`);
             
             res.status(200).json({ success: true, message: 'Verification code sent to email' });
         } catch (emailErr) {
-            console.error('Email error:', emailErr);
-            res.status(500).json({ success: false, message: 'Failed to send email. Please check your credentials.' });
+            console.error('[OTP] Email delivery failed:', emailErr.message);
+            res.status(500).json({ success: false, message: `Email delivery failed: ${emailErr.message}` });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('[OTP] General error:', error.message);
+        res.status(500).json({ success: false, message: `Server error: ${error.message}` });
     }
 };
 

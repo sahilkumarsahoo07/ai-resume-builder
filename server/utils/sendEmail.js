@@ -1,12 +1,6 @@
 import nodemailer from 'nodemailer';
 import Mailjet from 'node-mailjet';
 
-/**
- * sendEmail utility
- * Priority: 
- * 1. Mailjet API
- * 2. Gmail/SMTP (fallback)
- */
 const sendEmail = async (options) => {
     // 1. Try Mailjet API if credentials are available
     if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {

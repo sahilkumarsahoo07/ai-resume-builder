@@ -27,24 +27,54 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Database connection
+// Database connection state
+let isConnected = false;
+
 const connectDB = async () => {
     try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-resume-builder';
-        mongoose.set('bufferCommands', true); // Enable buffering so commands wait for connection
-        await mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 2000 });
+        const mongoURI = process.env.MONGODB_URI;
+        if (!mongoURI) throw new Error('MONGODB_URI is not defined');
+
+        mongoose.set('bufferCommands', true);
+        await mongoose.connect(mongoURI, { 
+            serverSelectionTimeoutMS: 5000, // 5 seconds timeout
+            connectTimeoutMS: 10000 
+        });
+        
+        isConnected = true;
         console.log('MongoDB connected successfully');
     } catch (err) {
-        console.error('MongoDB connection error (Non-fatal in dev):', err.message);
-        console.log('API will run in Mock Mode for Guest user.');
+        isConnected = false;
+        console.error('CRITICAL: MongoDB connection error:', err.message);
+        // On Render, we want to know immediately if the DB failed
     }
 };
 
+// Middleware to check DB connection
+app.use((req, res, next) => {
+    if (!isConnected && req.path.startsWith('/api/') && req.path !== '/api/health') {
+        return res.status(503).json({ 
+            success: false, 
+            message: 'Database connection is still initializing. Please try again in a few seconds.' 
+        });
+    }
+    next();
+});
+
 connectDB();
 
-// Basic Route for health check
-app.get('/', (req, res) => {
-    res.send('AI Resume Builder API is running');
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'active',
+        database: isConnected ? 'connected' : 'disconnected',
+        environment: {
+            node: process.env.NODE_ENV || 'development',
+            mailjet: !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY),
+            smtp: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+            mongo: !!process.env.MONGODB_URI
+        }
+    });
 });
 
 // Import and use routes here
