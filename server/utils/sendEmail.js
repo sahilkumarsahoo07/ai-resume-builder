@@ -6,11 +6,11 @@ const sendEmail = async (options) => {
     if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
         try {
             console.log('Attempting to send email via Mailjet API...');
-            const mailjet = Mailjet.apiConnect(
-                process.env.MAILJET_API_KEY,
-                process.env.MAILJET_SECRET_KEY,
-                { timeout: 10000 } // 10 seconds timeout
-            );
+            const mailjet = new Mailjet({
+                apiKey: process.env.MAILJET_API_KEY,
+                apiSecret: process.env.MAILJET_SECRET_KEY,
+                config: { timeout: 5000 } // 5 seconds timeout
+            });
 
             const result = await mailjet
                 .post('send', { version: 'v3.1' })
@@ -37,7 +37,7 @@ const sendEmail = async (options) => {
             console.log('Email successfully sent via Mailjet API');
             return result.body;
         } catch (mailjetError) {
-            console.warn('Mailjet API failed:', mailjetError.message);
+            console.warn('[Email] Mailjet API failure:', mailjetError.message);
             // Fall through to SMTP
         }
     }
@@ -45,7 +45,7 @@ const sendEmail = async (options) => {
     // 2. Fallback: Create a transporter for SMTP (Using Gmail)
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         try {
-            console.log('Attempting SMTP fallback (Gmail)...');
+            console.log('[Email] Attempting SMTP fallback (Gmail)...');
             const transporter = nodemailer.createTransport({
                 host: 'smtp.gmail.com',
                 port: 465,
@@ -54,8 +54,9 @@ const sendEmail = async (options) => {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS,
                 },
-                connectionTimeout: 10000, // 10 seconds
-                greetingTimeout: 10000,   // 10 seconds
+                connectionTimeout: 5000, // 5 seconds
+                greetingTimeout: 5000,   // 5 seconds
+                socketTimeout: 5000,     // 5 seconds
             });
 
             const mailOptions = {
@@ -67,11 +68,11 @@ const sendEmail = async (options) => {
             };
 
             await transporter.sendMail(mailOptions);
-            console.log('Email successfully sent via SMTP Fallback');
+            console.log('[Email] Successfully sent via SMTP Fallback');
             return;
         } catch (smtpError) {
-            console.error('SMTP Fallback failed:', smtpError.message);
-            throw smtpError;
+            console.error('[Email] SMTP Fallback failure:', smtpError.message);
+            throw new Error(`Email failed: Mailjet unreachable and SMTP timed out (${smtpError.message})`);
         }
     }
 

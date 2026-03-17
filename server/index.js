@@ -75,6 +75,11 @@ app.use((req, res, next) => {
 
 connectDB();
 
+// Root route for Render health check
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'server-active' });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
