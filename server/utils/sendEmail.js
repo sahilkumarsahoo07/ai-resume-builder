@@ -4,16 +4,16 @@ import { Resend } from 'resend';
 
 const sendEmail = async (options) => {
     // Debug: Check environment variables
-    const hasResend = !!(process.env.RESEND_API_KEY);
-    const hasMailjet = !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
-    const hasSMTP = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+    const isPlaceholder = (val) => !val || val.includes('your_') || val.includes('<password>');
+
+    const hasResend = !isPlaceholder(process.env.RESEND_API_KEY);
+    const hasMailjet = !isPlaceholder(process.env.MAILJET_API_KEY) && !isPlaceholder(process.env.MAILJET_SECRET_KEY);
+    const hasSMTP = !isPlaceholder(process.env.EMAIL_USER) && !isPlaceholder(process.env.EMAIL_PASS);
     
-    console.log('[Email] Config check:', { 
-        hasResend,
-        hasMailjet, 
-        hasSMTP, 
-        hasFrom: !!(process.env.RESEND_FROM_EMAIL || process.env.MAILJET_FROM_EMAIL),
-        targetEmail: options.email
+    console.log('[Email] Service Availability:', { 
+        Resend: hasResend ? 'READY' : 'MISSING',
+        Mailjet: hasMailjet ? 'READY' : 'MISSING', 
+        SMTP: hasSMTP ? 'READY' : 'MISSING'
     });
 
     // 0. Try Resend if API key is available

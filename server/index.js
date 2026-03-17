@@ -101,7 +101,28 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/pdf', pdfRoutes);
 
+// Production Readiness Check
+const checkReady = () => {
+    console.log('\n--- Production Readiness Check ---');
+    const required = {
+        MONGODB_URI: !!process.env.MONGODB_URI,
+        RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+        MAILJET_API_KEY: !!process.env.MAILJET_API_KEY,
+        GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID
+    };
+    
+    Object.entries(required).forEach(([key, present]) => {
+        console.log(`${present ? '✅' : '❌'} ${key}: ${present ? 'Configured' : 'MISSING'}`);
+    });
+
+    if (!required.RESEND_API_KEY && !required.MAILJET_API_KEY) {
+        console.log('⚠️ WARNING: No production email service (Resend/Mailjet) configured. OTP will fail on Render.');
+    }
+    console.log('---------------------------------\n');
+};
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT} (Bound to 0.0.0.0)`);
+    checkReady();
 });
