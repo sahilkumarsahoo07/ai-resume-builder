@@ -1,131 +1,96 @@
-import nodemailer from 'nodemailer';
 import Mailjet from 'node-mailjet';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const sendEmail = async (options) => {
-    // Debug: Check environment variables
-    const isPlaceholder = (val) => !val || val.includes('your_') || val.includes('<password>');
-
-    const hasResend = !isPlaceholder(process.env.RESEND_API_KEY);
-    const hasMailjet = !isPlaceholder(process.env.MAILJET_API_KEY) && !isPlaceholder(process.env.MAILJET_SECRET_KEY);
-    const hasSMTP = !isPlaceholder(process.env.EMAIL_USER) && !isPlaceholder(process.env.EMAIL_PASS);
-    
-    console.log('[Email] Service Availability:', { 
-        Resend: hasResend ? 'READY' : 'MISSING',
-        Mailjet: hasMailjet ? 'READY' : 'MISSING', 
-        SMTP: hasSMTP ? 'READY' : 'MISSING'
+// Initialize Mailjet client if API keys are available
+let mailjetClient = null;
+if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
+    mailjetClient = new Mailjet({
+        apiKey: process.env.MAILJET_API_KEY,
+        apiSecret: process.env.MAILJET_SECRET_KEY
     });
+}
 
-    // 0. Try Resend if API key is available
-    if (hasResend) {
-        try {
-            console.log('[Email] Attempting to send via Resend...');
-            const resend = new Resend(process.env.RESEND_API_KEY);
+// Gmail SMTP transporter for local development or fallback
+const gmailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+    logger: process.env.NODE_ENV !== 'production',
+    debug: process.env.NODE_ENV !== 'production',
+});
 
-            const { data, error } = await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-                to: options.email,
-                subject: options.subject,
-                text: options.message,
-                html: options.html,
-            });
+/**
+ * Send email using appropriate service based on environment
+ * - If MAILJET_API_KEY + MAILJET_SECRET_KEY are set + production: Uses Mailjet API
+ * - Otherwise: Uses Gmail SMTP (fallback)
+ * 
+ * @param {Object} options - Email options
+ * @param {string} options.email - Recipient email (maps to 'to')
+ * @param {string} options.subject - Email subject
+ * @param {string} options.html - HTML content
+ * @param {string} [options.message] - Plain text fallback (optional)
+ * @returns {Promise} - Email send result
+ */
+const sendEmail = async ({ email: to, subject, html, message }) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const hasMailjetKeys = !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
 
-            if (error) {
-                console.warn('[Email] Resend API error:', error.message);
-                // Fall through to Mailjet/SMTP
-            } else {
-                console.log('[Email] Resend success:', data.id);
-                return data;
-            }
-        } catch (resendError) {
-            console.warn('[Email] Resend service failed:', resendError.message);
-            // Fall through to Mailjet/SMTP
-        }
-    }
+    // Use Mailjet only if in production AND API keys are available
+    const useMailjet = isProduction && hasMailjetKeys;
 
-    // 1. Try Mailjet API if credentials are available
-    if (hasMailjet) {
-        try {
-            console.log('[Email] Initiating Mailjet v6 connection...');
-            
-            // Mailjet v6 workaround for ESM default exports
-            const MailjetClient = Mailjet.default || Mailjet;
-            const mailjet = new MailjetClient({
-                apiKey: process.env.MAILJET_API_KEY,
-                apiSecret: process.env.MAILJET_SECRET_KEY,
-                config: { timeout: 10000 } // 10s
-            });
+    try {
+        if (useMailjet && mailjetClient) {
+            // Use Mailjet API in production
+            console.log('📧 Sending email via Mailjet API (Production)');
 
-            console.log('[Email] Sending Mailjet request...');
-            const result = await mailjet
+            const result = await mailjetClient
                 .post('send', { version: 'v3.1' })
                 .request({
                     Messages: [
                         {
                             From: {
-                                Email: (process.env.MAILJET_FROM_EMAIL || '').trim(),
+                                Email: process.env.MAILJET_FROM_EMAIL || 'no-reply@ai-resume-builder.com',
                                 Name: 'AI Resume Builder'
                             },
                             To: [
                                 {
-                                    Email: (options.email || '').trim(),
-                                    Name: options.email
+                                    Email: to
                                 }
                             ],
-                            Subject: options.subject,
-                            TextPart: options.message,
-                            HTMLPart: options.html
+                            Subject: subject,
+                            TextPart: message || '',
+                            HTMLPart: html
                         }
                     ]
                 });
 
-            console.log('[Email] Mailjet success:', result.status);
-            return result.body;
-        } catch (mailjetError) {
-            console.error('[Email] Mailjet Error details:', {
-                message: mailjetError.message,
-                statusCode: mailjetError.statusCode,
-                originalError: mailjetError.response?.body || 'No body info'
-            });
-            // Fall through to SMTP if fail
-        }
-    }
-
-    // 2. Fallback: Create a transporter for SMTP (Using Gmail)
-    if (hasSMTP) {
-        try {
-            console.log('[Email] Attempting SMTP fallback (Gmail)...');
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                },
-                connectionTimeout: 5000,
-                greetingTimeout: 5000,
-                socketTimeout: 5000,
-            });
-
-            const mailOptions = {
+            console.log('✅ Email sent successfully via Mailjet:', result.body);
+            return { success: true, data: result.body };
+        } else {
+            // Use Gmail SMTP in development or as fallback
+            console.log(`📧 Sending email via Gmail SMTP (${isProduction ? 'Fallback' : 'Development'})`);
+            const info = await gmailTransporter.sendMail({
                 from: `"AI Resume Builder" <${process.env.EMAIL_USER}>`,
-                to: options.email,
-                subject: options.subject,
-                text: options.message,
-                html: options.html,
-            };
+                to: to,
+                subject: subject,
+                text: message || '',
+                html: html,
+            });
 
-            const info = await transporter.sendMail(mailOptions);
-            console.log('[Email] SMTP success:', info.messageId);
-            return;
-        } catch (smtpError) {
-            console.error('[Email] SMTP Error details:', smtpError.message);
-            throw new Error(`Email failed: Mailjet error and SMTP failed (${smtpError.message})`);
+            console.log('✅ Email sent successfully via Gmail:', info.messageId);
+            return { success: true, messageId: info.messageId };
         }
+    } catch (error) {
+        // Detailed error logging specifically for Mailjet
+        if (error.response && error.response.body) {
+            console.error(`❌ Mailjet API Error:`, JSON.stringify(error.response.body, null, 2));
+        } else {
+            console.error(`❌ Error sending email via ${useMailjet ? 'Mailjet' : 'Gmail'}:`, error.message);
+        }
+        throw new Error(`Email delivery failed: ${error.message}`);
     }
-
-    throw new Error('No working email service configured. Check MAILJET or SMTP env variables.');
 };
 
 export default sendEmail;
