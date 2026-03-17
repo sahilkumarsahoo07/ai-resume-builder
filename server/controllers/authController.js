@@ -46,21 +46,26 @@ export const sendRegisterOTP = async (req, res) => {
         );
         console.log(`[OTP] Stored in DB for: ${email}`);
 
-        // Send Email
-        try {
-            await sendEmail({
-                email,
-                subject: 'Verify your AI Resume Builder account',
-                message: `Your verification code is: ${otp}. It expires in 10 minutes.`,
-                html: getOTPTemplate(otp, 'verification')
-            });
-            console.log(`[OTP] Email sent to: ${email}`);
+        // --- TEMPORARILY DISABLED EMAIL SENDING ---
+        // try {
+        //     await sendEmail({
+        //         email,
+        //         subject: 'Verify your AI Resume Builder account',
+        //         message: `Your verification code is: ${otp}. It expires in 10 minutes.`,
+        //         html: getOTPTemplate(otp, 'verification')
+        //     });
+        //     console.log(`[OTP] Email sent to: ${email}`);
             
-            res.status(200).json({ success: true, message: 'Verification code sent to email' });
-        } catch (emailErr) {
-            console.error('[OTP] Email delivery failed:', emailErr.message);
-            res.status(500).json({ success: false, message: `Email delivery failed: ${emailErr.message}` });
-        }
+        //     res.status(200).json({ success: true, message: 'Verification code sent to email' });
+        // } catch (emailErr) {
+        //     console.error('[OTP] Email delivery failed:', emailErr.message);
+        //     res.status(500).json({ success: false, message: `Email delivery failed: ${emailErr.message}` });
+        // }
+        
+        // Auto-success to bypass blocked email provider
+        console.log(`[OTP BYPASS] OTP for ${email} is ${otp}. Email sending is bypassed.`);
+        res.status(200).json({ success: true, message: 'Email bypassed for now. Enter any 6 digits to continue.' });
+        // ------------------------------------------
     } catch (error) {
         console.error('[OTP] General error:', error.message);
         res.status(500).json({ success: false, message: `Server error: ${error.message}` });
@@ -72,10 +77,12 @@ export const register = async (req, res) => {
         const { name, email, password, otp } = req.body;
 
         // 1. Verify OTP first
-        const otpRecord = await OTP.findOne({ email });
-        if (!otpRecord || otpRecord.otp !== otp) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
-        }
+        // --- TEMPORARILY DISABLED OTP VERIFICATION ---
+        // const otpRecord = await OTP.findOne({ email });
+        // if (!otpRecord || otpRecord.otp !== otp) {
+        //     return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
+        // }
+        // ----------------------------------------------
 
         // 2. Check if user exists (last second check)
         const userExists = await User.findOne({ email });
@@ -270,14 +277,17 @@ export const forgotPassword = async (req, res) => {
         user.resetPasswordExpires = otpExpires;
         await user.save();
 
-        await sendEmail({
-            email: user.email,
-            subject: 'Password Reset OTP',
-            message: `Your password reset code is: ${otp}. It expires in 10 minutes.`,
-            html: getOTPTemplate(otp, 'reset')
-        });
+        // --- TEMPORARILY DISABLED EMAIL SENDING ---
+        // await sendEmail({
+        //     email: user.email,
+        //     subject: 'Password Reset OTP',
+        //     message: `Your password reset code is: ${otp}. It expires in 10 minutes.`,
+        //     html: getOTPTemplate(otp, 'reset')
+        // });
 
-        res.status(200).json({ success: true, message: 'Reset OTP sent to email' });
+        console.log(`[OTP BYPASS] Password Reset OTP for ${user.email} is ${otp}`);
+        res.status(200).json({ success: true, message: 'Email bypassed. Check server console for reset OTP.' });
+        // ------------------------------------------
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
