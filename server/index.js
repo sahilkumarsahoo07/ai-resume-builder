@@ -29,33 +29,45 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database connection state
 let isConnected = false;
+let lastDBError = null;
 
 const connectDB = async () => {
     try {
         const mongoURI = process.env.MONGODB_URI;
-        if (!mongoURI) throw new Error('MONGODB_URI is not defined');
+        if (!mongoURI) throw new Error('MONGODB_URI is not defined in environment variables');
 
-        mongoose.set('bufferCommands', true);
+        const maskedURI = mongoURI.replace(/:([^@]+)@/, ':****@');
+        console.log(`[DB] Attempting to connect to: ${maskedURI}`);
+        // Disable buffering so we don't hang requests
+        mongoose.set('bufferCommands', false); 
+        
         await mongoose.connect(mongoURI, { 
-            serverSelectionTimeoutMS: 5000, // 5 seconds timeout
-            connectTimeoutMS: 10000 
+            serverSelectionTimeoutMS: 10000, // 10 seconds to find server
+            connectTimeoutMS: 20000,        // 20 seconds to establish connection
         });
         
         isConnected = true;
-        console.log('MongoDB connected successfully');
+        lastDBError = null;
+        console.log('[DB] MongoDB connected successfully');
     } catch (err) {
         isConnected = false;
-        console.error('CRITICAL: MongoDB connection error:', err.message);
-        // On Render, we want to know immediately if the DB failed
+        lastDBError = err.message;
+        console.error('[DB] CRITICAL CONNECTION ERROR:', err.message);
     }
 };
 
 // Middleware to check DB connection
 app.use((req, res, next) => {
-    if (!isConnected && req.path.startsWith('/api/') && req.path !== '/api/health') {
+    // Skip check for health or if it's not an API route
+    if (req.path === '/api/health' || !req.path.startsWith('/api/')) {
+        return next();
+    }
+
+    if (!isConnected) {
         return res.status(503).json({ 
             success: false, 
-            message: 'Database connection is still initializing. Please try again in a few seconds.' 
+            message: 'Database is not connected. Check /api/health for details.',
+            error: lastDBError 
         });
     }
     next();
@@ -68,6 +80,7 @@ app.get('/api/health', (req, res) => {
     res.json({
         status: 'active',
         database: isConnected ? 'connected' : 'disconnected',
+        error: lastDBError,
         environment: {
             node: process.env.NODE_ENV || 'development',
             mailjet: !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY),

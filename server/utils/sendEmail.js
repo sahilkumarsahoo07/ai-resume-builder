@@ -8,7 +8,8 @@ const sendEmail = async (options) => {
             console.log('Attempting to send email via Mailjet API...');
             const mailjet = Mailjet.apiConnect(
                 process.env.MAILJET_API_KEY,
-                process.env.MAILJET_SECRET_KEY
+                process.env.MAILJET_SECRET_KEY,
+                { timeout: 10000 } // 10 seconds timeout
             );
 
             const result = await mailjet
@@ -53,6 +54,8 @@ const sendEmail = async (options) => {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS,
                 },
+                connectionTimeout: 10000, // 10 seconds
+                greetingTimeout: 10000,   // 10 seconds
             });
 
             const mailOptions = {
