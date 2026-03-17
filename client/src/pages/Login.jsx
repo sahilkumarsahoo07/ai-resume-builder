@@ -75,14 +75,24 @@ const Login = () => {
                 }
             }
         } else if (view === 'signup') {
-            const result = await sendRegisterOTP(formData.email);
+            // --- TEMPORARILY DISABLED OTP UI ---
+            // const result = await sendRegisterOTP(formData.email);
+            // if (result.success) {
+            //     setIsSignupOTP(true);
+            //     setView('otp');
+            //     setMessage('Verification code sent to your email.');
+            // } else {
+            //     setError(result.message);
+            // }
+            
+            // Bypass straight to signup
+            const result = await signup(formData.name, formData.email, formData.password, '123456');
             if (result.success) {
-                setIsSignupOTP(true);
-                setView('otp');
-                setMessage('Verification code sent to your email.');
+                navigate('/dashboard');
             } else {
                 setError(result.message);
             }
+            // -----------------------------------
         } else if (view === 'otp') {
             if (isSignupOTP) {
                 // Finalize signup with OTP
