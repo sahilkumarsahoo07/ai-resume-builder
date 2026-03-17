@@ -229,7 +229,28 @@ export const login = async (req, res) => {
             res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
     } catch (error) {
+        console.error('[GoogleLogin] Error:', error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const testEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+        console.log(`[Test] Sending test email to: ${email}`);
+        await sendEmail({
+            email,
+            subject: 'AI Resume Builder Test Email',
+            message: 'If you receive this, your email configuration is working perfectly!',
+            html: '<h1>Success! 🚀</h1><p>Your email service is correctly configured for production.</p>'
+        });
+
+        res.json({ success: true, message: 'Test email sent successfully!' });
+    } catch (error) {
+        console.error('[Test] Email failed:', error.message);
+        res.status(500).json({ success: false, message: `Email failed: ${error.message}` });
     }
 };
 
